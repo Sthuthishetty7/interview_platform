@@ -1,9 +1,11 @@
 
+require('dotenv').config();
+
 const express = require('express');
 const { randomUUID } = require('crypto');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 4000;
 const pool = require('./db');
 
 app.use(express.json());
