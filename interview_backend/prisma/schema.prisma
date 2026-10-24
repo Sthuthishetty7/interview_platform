@@ -16,6 +16,7 @@ model User {
 
   interviewsAsInterviewer Interview[] @relation("Interviewer")
   interviewsAsCandidate   Interview[] @relation("Candidate")
+
 }
 
 model Interview {
@@ -43,4 +44,5 @@ model InterviewNote {
 
   interviewId Int
   interview   Interview @relation(fields: [interviewId], references: [id], onDelete: Cascade)
-}
+
+  }
