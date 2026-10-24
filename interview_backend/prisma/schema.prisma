@@ -38,11 +38,12 @@ model Interview {
 }
 
 model InterviewNote {
-  id         Int      @id @default(autoincrement())
-  content    String
-  createdAt  DateTime @default(now())
+  id        Int      @id @default(autoincrement())
+  content   String
+  createdAt DateTime @default(now())
 
   interviewId Int
   interview   Interview @relation(fields: [interviewId], references: [id], onDelete: Cascade)
 
-  }
+  @@map("Interviewer Notes")
+}
