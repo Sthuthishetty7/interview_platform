@@ -1,5 +1,6 @@
 // The product name is defined once, so you can rename it in one place.
 import { PRODUCT_NAME } from "../utils/constants";
+import { Link } from "react-router-dom";
 
 // The sample code shown inside the interview room preview.
 const sampleCode = `function twoSum(nums, target) {
@@ -62,6 +63,7 @@ function Landing() {
           <nav className="nav-links" aria-label="Main">
             <a href="#features">Features</a>
             <a href="#how-it-works">How it works</a>
+            <Link to="/dashboard">Dashboard</Link>
             <a className="btn btn-ghost" href="/login">Log in</a>
             <a className="btn btn-primary" href="/register">Create account</a>
           </nav>

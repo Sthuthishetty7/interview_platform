@@ -2,8 +2,11 @@ const http = require("http");
 const env = require("./config/env");
 const app = require("./app");
 const prisma = require("./lib/prisma");
+const { attachSignaling } = require("./sockets/signaling");
 
 const server = http.createServer(app);
+
+attachSignaling(server, env.clientOrigin);
 
 server.listen(env.port, () => {
   console.log(`Backend running at http://localhost:${env.port}`);
