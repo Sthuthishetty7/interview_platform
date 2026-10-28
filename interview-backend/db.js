@@ -1,10 +1,22 @@
-{
-  "dependencies": {
-    "bcryptjs": "^3.0.3",
-    "cors": "^2.8.6",
-    "dotenv": "^18.0.8",
-    "express": "^5.3.0",
-    "jsonwebtoken": "^9.0.3",
-    "pg": "^8.23.1"
-  }
-}
+
+require('dotenv').config();
+
+const { Pool } = require('pg');
+
+const pool = new Pool({
+    user: process.env.DB_USER,
+    host: process.env.DB_HOST,
+    database: process.env.DB_NAME,
+    password: process.env.DB_PASSWORD,
+    port: Number(process.env.DB_PORT)
+});
+
+pool.on('connect', () => {
+    console.log('Connected to PostgreSQL successfully');
+});
+
+pool.on('error', (error) => {
+    console.error('Unexpected PostgreSQL error:', error.message);
+});
+
+module.exports = pool;
