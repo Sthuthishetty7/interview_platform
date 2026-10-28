@@ -1,0 +1,49 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           Int      @id @default(autoincrement())
+  name         String
+  email        String   @unique
+  role         String
+  passwordHash String?
+  createdAt    DateTime @default(now())
+
+  interviewsAsInterviewer Interview[] @relation("Interviewer")
+  interviewsAsCandidate   Interview[] @relation("Candidate")
+}
+
+model Interview {
+  id          Int       @id @default(autoincrement())
+  title       String
+  scheduledAt DateTime?
+  duration    Int       @default(60)
+  status      String    @default("scheduled")
+  roomId      String    @unique
+  createdAt   DateTime  @default(now())
+
+  interviewerId Int
+  candidateId   Int
+
+  interviewer User @relation("Interviewer", fields: [interviewerId], references: [id])
+  candidate   User @relation("Candidate", fields: [candidateId], references: [id])
+
+  notes InterviewNote[]
+}
+
+model InterviewNote {
+  id        Int      @id @default(autoincrement())
+  content   String
+  createdAt DateTime @default(now())
+
+  interviewId Int
+  interview   Interview @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+
+  @@map("Interviewer Notes")
+}
