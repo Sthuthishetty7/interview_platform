@@ -5,6 +5,8 @@ const rateLimit = require("express-rate-limit");
 
 const env = require("./config/env");
 const prisma = require("./lib/prisma");
+const mockTestRoutes = require("./routes/mockTestRoutes");
+
 const { notFound, errorHandler } = require("./middleware/errorHandler");
 
 const app = express();
@@ -22,6 +24,7 @@ app.use(
 );
 
 // Health check: proves the server is up and can reach PostgreSQL.
+app.use("/api/mock-tests", mockTestRoutes);
 app.get("/api/health", async (req, res) => {
   try {
     await prisma.$queryRaw`SELECT 1`;
@@ -31,7 +34,7 @@ app.get("/api/health", async (req, res) => {
     res.status(503).json({ status: "error", database: "unreachable" });
   }
 });
-
+app.use("/api/mock-tests", mockTestRoutes);
 app.use(notFound);
 app.use(errorHandler);
 

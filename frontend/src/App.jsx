@@ -1,9 +1,11 @@
+
 import { Routes, Route } from "react-router-dom";
 import Landing from "./pages/Landing";
 import Register from "./pages/Register";
 import Login from "./pages/Login";
 import Room from "./pages/Room";
 import Dashboard from "./pages/Dashboard";
+import MockTest from "./pages/MockTest";
 
 function App() {
   return (
@@ -13,6 +15,7 @@ function App() {
       <Route path="/login" element={<Login />} />
       <Route path="/room/:roomCode" element={<Room />} />
       <Route path="/dashboard" element={<Dashboard />} />
+      <Route path="/mock-test" element={<MockTest />} />
     </Routes>
   );
 }
