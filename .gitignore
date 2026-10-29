@@ -1,0 +1,9 @@
+# Environment variables and secrets
+interview-backend/.env
+
+# Dependencies
+interview-backend/node_modules/
+frontend/node_modules/
+
+# Local environment files
+.env
