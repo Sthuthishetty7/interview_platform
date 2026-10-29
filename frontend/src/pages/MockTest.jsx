@@ -78,42 +78,55 @@ function MockTest() {
     }));
   }
 
-  async function submitTest() {
-    setError("");
 
-    try {
-      const response = await fetch(
-        "http://localhost:4000/api/mock-tests/submit",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-         body: JSON.stringify({
-  topic,
-  questionIds: questions.map((question) => question.id),
-  answers: Object.entries(answers).map(([questionId, selectedOption]) => ({
-    questionId: Number(questionId),
-    selectedOption,
-  })),
-}),
-        }
-      );
+async function submitTest() {
+  setError("");
+  setLoading(true);
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Could not submit the test.");
+  try {
+    const response = await fetch(
+      "http://localhost:4000/api/mock-tests/submit",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          topic,
+          questionIds: questions.map((question) => question.id),
+          answers: Object.fromEntries(
+            Object.entries(answers).map(([questionId, selectedOption]) => [
+              questionId,
+              selectedOption,
+            ])
+          ),
+        }),
       }
+    );
 
-      setScore(data);
-      setSubmitted(true);
-    } catch (err) {
-      setError(
-        err.message === "Failed to fetch"
-          ? "The submit endpoint is not ready yet. We will add it next."
-          : err.message
-      );
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || "Could not submit the test.");
     }
+
+    setScore({
+      ...data,
+      totalQuestions: questions.length,
+    });
+    setSubmitted(true);
+  } catch (err) {
+    console.error("Mock test submission failed:", err);
+    setError(
+      err.message === "Failed to fetch"
+        ? "Could not connect to the backend. Make sure it is running."
+        : err.message
+    );
+  } finally {
+    setLoading(false);
   }
+}
+
+
+
 
   function backToTopics() {
     setStarted(false);

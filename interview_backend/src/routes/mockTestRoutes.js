@@ -35,6 +35,7 @@ router.get("/:topic/questions", (req, res) => {
 });
 
 // Submit answers and calculate the score.
+
 router.post("/submit", (req, res) => {
   const { topic, answers, questionIds } = req.body;
   const questions = mockQuestions[topic];
@@ -43,23 +44,26 @@ router.post("/submit", (req, res) => {
     return res.status(404).json({ error: "Topic not found." });
   }
 
-  if (!Array.isArray(answers) || !Array.isArray(questionIds)) {
+  if (!answers || typeof answers !== "object" || Array.isArray(answers)) {
     return res.status(400).json({
-      error: "Answers and question IDs must be provided.",
+      error: "Please provide answers as an object.",
     });
   }
 
-  const selectedAnswers = new Map(
-    answers.map((answer) => [
-      Number(answer.questionId),
-      Number(answer.selectedOption),
-    ])
-  );
+  const ids = Array.isArray(questionIds)
+    ? questionIds.map(Number)
+    : Object.keys(answers).map(Number);
+
+  if (ids.length === 0 || ids.some((id) => !Number.isInteger(id) || id < 1)) {
+    return res.status(400).json({
+      error: "Please provide valid question IDs.",
+    });
+  }
 
   let correctAnswers = 0;
 
-  for (const id of questionIds) {
-    const question = questions[Number(id) - 1];
+  for (const id of ids) {
+    const question = questions[id - 1];
 
     if (!question) {
       return res.status(400).json({
@@ -67,16 +71,23 @@ router.post("/submit", (req, res) => {
       });
     }
 
-    if (selectedAnswers.get(Number(id)) === question.correctAnswer) {
+    const selectedOption = Number(answers[String(id)]);
+
+    if (
+      Object.prototype.hasOwnProperty.call(answers, String(id)) &&
+      Number.isInteger(selectedOption) &&
+      selectedOption === question.correctAnswer
+    ) {
       correctAnswers++;
     }
   }
 
   res.json({
     score: correctAnswers,
-    totalQuestions: questionIds.length,
+    totalQuestions: ids.length,
     correctAnswers,
   });
 });
+
 
 module.exports = router;
