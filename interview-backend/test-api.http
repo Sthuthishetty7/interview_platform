@@ -18,3 +18,52 @@ GET http://localhost:3000/api/interviews
 
 ### Get one interview by ID
 GET http://localhost:4000/api/interviews/1
+### Create a test interview
+POST http://localhost:4000/api/interviews
+Content-Type: application/json
+
+{
+  "title": "Demo Technical Interview",
+  "duration": 30,
+  "interviewerId": 1,
+  "candidateId": 2
+}
+
+### Get the newly created interview
+GET http://localhost:4000/api/interviews/3
+### Check the database connection
+GET http://localhost:4000/api/health
+
+### Submit Mock Test Answers
+POST http://localhost:4000/api/mock-tests/submit
+Content-Type: application/json
+
+{
+  "topic": "Python",
+  "answers": {
+    "1": 1,
+    "2": 2,
+    "3": 1,
+    "4": 2,
+    "5": 1,
+    "6": 2,
+    "7": 2,
+    "8": 2,
+    "9": 1,
+    "10": 1
+  }
+}
+
+### Create a new test interview
+POST http://localhost:4000/api/interviews
+Content-Type: application/json
+
+{
+  "title": "API Test Interview",
+  "duration": 45,
+  "interviewerId": 1,
+  "candidateId": 2
+}
+
+### Get Python Mock Test Questions
+GET http://localhost:4000/api/mock-tests/Python/questions

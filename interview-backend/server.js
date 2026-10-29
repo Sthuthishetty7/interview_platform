@@ -2,14 +2,15 @@
 require('dotenv').config();
 
 const express = require('express');
+const cors = require('cors');
 const { randomUUID } = require('crypto');
-
 const app = express();
 const PORT = process.env.PORT || 4000;
 const pool = require('./db');
 const mockTestRoutes = require('./mock-test/mockTestRoutes');
-
+app.use(cors());
 app.use(express.json());
+
 app.use('/api/mock-tests', mockTestRoutes);
 
 // Basic route
