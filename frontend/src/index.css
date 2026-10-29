@@ -885,3 +885,21 @@ a {
     padding: 18px;
   }
 }
+.mock-option {
+  display: block;
+  width: 100%;
+  padding: 12px 14px;
+  margin: 6px 0;
+  text-align: left;
+  cursor: pointer;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  background: white;
+  color: #111827;
+}
+
+.mock-option.selected {
+  border: 2px solid #2563eb;
+  background: #dbeafe;
+  color: #1d4ed8;
+}
