@@ -2,7 +2,7 @@
 
 /* ---------- Design tokens: change colors and fonts here ---------- */
 :root {
-  --ink: #16213e;
+  --ink: #2d163e;
   --ink-soft: #4a5578;
   --paper: #f5f7fb;
   --white: #ffffff;
@@ -588,13 +588,13 @@ a {
   width: 0.55rem;
   height: 0.55rem;
   border-radius: 50%;
-  background: #e0a526;
+  background: #05010a00;
 }
 
 .room-error {
   margin: 1rem 1.25rem 0;
   padding: 0.8rem 1rem;
-  border: 1.5px solid #f08b84;
+  border: 1.5px solid #1c053000;
   border-radius: 8px;
   background: rgba(179, 38, 30, 0.2);
   color: var(--white);
@@ -641,7 +641,7 @@ a {
 .tile-placeholder {
   padding: 1rem;
   text-align: center;
-  color: #9fb0e0;
+  color: #c49fe000;
 }
 
 .camera-off {
@@ -649,7 +649,7 @@ a {
   inset: 0;
   display: grid;
   place-items: center;
-  background: #0e1630;
+  background: #000000;
 }
 
 .camera-off .tile-avatar {
@@ -663,12 +663,12 @@ a {
   justify-content: center;
   gap: 0.75rem;
   padding: 1rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  border-top: 1px solid rgb(3, 2, 5);
 }
 
 .control-btn {
   padding: 0.65rem 1.1rem;
-  border: 1.5px solid rgba(255, 255, 255, 0.25);
+  border: 1.5px solid rgba(13, 7, 19, 0.978);
   border-radius: 8px;
   background: transparent;
   color: var(--white);
@@ -679,7 +679,7 @@ a {
 }
 
 .control-btn:hover:not(:disabled) {
-  border-color: rgba(255, 255, 255, 0.6);
+  border-color: rgba(255, 255, 255, 0);
 }
 
 .control-btn:disabled {
@@ -784,7 +784,7 @@ a {
 }
 
 .status-completed::before {
-  background: #9aa3bd;
+  background: #a99abd00;
 }
 
 .link-action {
@@ -832,4 +832,74 @@ a {
 
 .video-tile video.is-hidden {
   visibility: hidden;
+}
+
+.mock-test-panel {
+  padding: 28px;
+  margin: 24px 0;
+  background: var(--surface, #ffffff);
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: 16px;
+}
+
+.mock-topic-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin: 24px 0;
+}
+
+.mock-topic-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 20px;
+  text-align: left;
+  cursor: pointer;
+  background: var(--surface, #ffffff);
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: 12px;
+  color: inherit;
+}
+
+.mock-topic-card:hover,
+.mock-topic-card.selected {
+  border-color: var(--accent, #2850e8);
+}
+
+.mock-topic-card.selected {
+  box-shadow: 0 0 0 1px var(--accent, #2850e8);
+}
+
+.mock-topic-card span {
+  font-size: 14px;
+  opacity: 0.75;
+}
+
+@media (max-width: 600px) {
+  .mock-topic-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .mock-test-panel {
+    padding: 18px;
+  }
+}
+.mock-option {
+  display: block;
+  width: 100%;
+  padding: 12px 14px;
+  margin: 6px 0;
+  text-align: left;
+  cursor: pointer;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  background: white;
+  color: #111827;
+}
+
+.mock-option.selected {
+  border: 2px solid #2563eb;
+  background: #dbeafe;
+  color: #1d4ed8;
 }

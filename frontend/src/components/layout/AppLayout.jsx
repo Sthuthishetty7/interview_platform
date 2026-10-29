@@ -14,7 +14,8 @@ function AppLayout({ children }) {
             <span>{PRODUCT_NAME}</span>
           </Link>
           <nav className="nav-links" aria-label="Main">
-            <NavLink to="/dashboard">Dashboard</NavLink>
+             <NavLink to="/dashboard">Dashboard</NavLink>
+             <NavLink to="/mock-test">Mock Test</NavLink>
             {/* For now this just goes to the login page. Real log out comes with the API. */}
             <Link className="btn btn-ghost" to="/login">
               Log out
