@@ -8,11 +8,15 @@ const app = express();
 const PORT = process.env.PORT || 4000;
 const pool = require('./db');
 const mockTestRoutes = require('./mock-test/mockTestRoutes');
+const authRoutes = require('./auth/authRoutes');
+const authMiddleware = require('./middleware/authMiddleware');
+const notesRoutes = require('./notes/notesRoutes');
 app.use(cors());
 app.use(express.json());
 
 app.use('/api/mock-tests', mockTestRoutes);
-
+app.use('/api/auth', authRoutes);
+app.use('/api/interviews', notesRoutes);
 // Basic route
 app.get('/', (req, res) => {
     res.send('Technical Interview Platform Backend is running!');
@@ -38,39 +42,62 @@ app.get('/api/health', async (req, res) => {
 });
 
 // Create an interview
-app.post('/api/interviews', async (req, res) => {
+// Create an interview
+app.post('/api/interviews', authMiddleware, async (req, res) => {
+
+    // Only interviewers can create interviews
+    if (req.user.role !== 'interviewer') {
+        return res.status(403).json({
+            error: 'Only interviewers can create interviews.'
+        });
+    }
+
     const {
         title,
         scheduledAt,
         duration = 60,
-        interviewerId,
         candidateId
     } = req.body;
 
+    // Validate input
     if (
         typeof title !== 'string' ||
         !title.trim() ||
-        !Number.isInteger(interviewerId) ||
         !Number.isInteger(candidateId) ||
-        interviewerId <= 0 ||
         candidateId <= 0 ||
         !Number.isInteger(duration) ||
         duration <= 0
     ) {
         return res.status(400).json({
-            error: 'Provide a title, positive integer interviewerId and candidateId, and positive integer duration.'
+            error: 'Provide a valid title, candidateId and duration.'
         });
     }
 
-    if (scheduledAt !== undefined && scheduledAt !== null &&
+    if (
+        scheduledAt !== undefined &&
+        scheduledAt !== null &&
         (typeof scheduledAt !== 'string' ||
-         Number.isNaN(Date.parse(scheduledAt)))) {
+         Number.isNaN(Date.parse(scheduledAt)))
+    ) {
         return res.status(400).json({
             error: 'scheduledAt must be a valid date string or null.'
         });
     }
 
     try {
+        // Check whether the selected user is a candidate
+        const candidate = await pool.query(
+            'SELECT id FROM "User" WHERE id = $1 AND role = $2',
+            [candidateId, 'candidate']
+        );
+
+        if (candidate.rows.length === 0) {
+            return res.status(400).json({
+                error: 'Invalid candidate ID.'
+            });
+        }
+
+        // Use the logged-in interviewer's ID from the JWT
         const result = await pool.query(
             `INSERT INTO "Interview"
                 ("title", "scheduledAt", "duration", "status",
@@ -83,23 +110,18 @@ app.post('/api/interviews', async (req, res) => {
                 duration,
                 'scheduled',
                 randomUUID(),
-                interviewerId,
+                req.user.userId,
                 candidateId
             ]
         );
 
         res.status(201).json({
-            message: 'Interview created successfully',
+            message: 'Interview created successfully.',
             interview: result.rows[0]
         });
+
     } catch (error) {
         console.error('Create interview failed:', error.message);
-
-        if (error.code === '23503') {
-            return res.status(400).json({
-                error: 'The interviewerId or candidateId does not match an existing user.'
-            });
-        }
 
         res.status(500).json({
             error: 'Could not create interview.'
@@ -107,25 +129,47 @@ app.post('/api/interviews', async (req, res) => {
     }
 });
 
-// List interviews
-app.get('/api/interviews', async (req, res) => {
+// List interviews belonging to the logged-in user
+app.get('/api/interviews', authMiddleware, async (req, res) => {
     try {
-        const result = await pool.query(
-            `SELECT * FROM "Interview" ORDER BY "createdAt" DESC`
-        );
+        let result;
+
+        if (req.user.role === 'interviewer') {
+            result = await pool.query(
+                `SELECT * FROM "Interview"
+                 WHERE "interviewerId" = $1
+                 ORDER BY "createdAt" DESC`,
+                [req.user.userId]
+            );
+        } 
+        else if (req.user.role === 'candidate') {
+            result = await pool.query(
+                `SELECT * FROM "Interview"
+                 WHERE "candidateId" = $1
+                 ORDER BY "createdAt" DESC`,
+                [req.user.userId]
+            );
+        } 
+        else {
+            return res.status(403).json({
+                error: 'You are not authorized to view interviews.'
+            });
+        }
 
         res.json({
             interviews: result.rows
         });
+
     } catch (error) {
         console.error('List interviews failed:', error.message);
+
         res.status(500).json({
             error: 'Could not retrieve interviews.'
         });
     }
 });
-// Get one interview by ID
-app.get('/api/interviews/:id', async (req, res) => {
+// Get one interview by ID (only assigned users)
+app.get('/api/interviews/:id', authMiddleware, async (req, res) => {
     const id = Number(req.params.id);
 
     if (!Number.isInteger(id) || id <= 0) {
@@ -135,20 +179,41 @@ app.get('/api/interviews/:id', async (req, res) => {
     }
 
     try {
-        const result = await pool.query(
-            'SELECT * FROM "Interview" WHERE "id" = $1',
-            [id]
-        );
+        let result;
 
-        if (result.rows.length === 0) {
-            return res.status(404).json({
-                error: 'Interview not found.'
+        if (req.user.role === 'interviewer') {
+            result = await pool.query(
+                `SELECT * FROM "Interview"
+                 WHERE id = $1 AND "interviewerId" = $2`,
+                [id, req.user.userId]
+            );
+        } 
+        else if (req.user.role === 'candidate') {
+            result = await pool.query(
+                `SELECT * FROM "Interview"
+                 WHERE id = $1 AND "candidateId" = $2`,
+                [id, req.user.userId]
+            );
+        } 
+        else {
+            return res.status(403).json({
+                error: 'You are not authorized to view this interview.'
             });
         }
 
-        res.json({ interview: result.rows[0] });
+        if (result.rows.length === 0) {
+            return res.status(404).json({
+                error: 'Interview not found or access denied.'
+            });
+        }
+
+        res.json({
+            interview: result.rows[0]
+        });
+
     } catch (error) {
         console.error('Get interview failed:', error.message);
+
         res.status(500).json({
             error: 'Could not retrieve interview.'
         });
