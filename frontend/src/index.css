@@ -903,3 +903,251 @@ a {
   background: #dbeafe;
   color: #1d4ed8;
 }
+/* ---------- Redesigned dashboard ---------- */
+
+.dashboard-welcome {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding: 2rem;
+  margin-bottom: 1.75rem;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: linear-gradient(120deg, #ffffff, #eef2ff);
+}
+
+.dashboard-eyebrow {
+  margin-bottom: 0.55rem;
+  color: var(--signal);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+}
+
+.dashboard-welcome h1 {
+  font-size: clamp(1.8rem, 4vw, 2.5rem);
+  line-height: 1.15;
+  letter-spacing: -0.035em;
+}
+
+.dashboard-description {
+  margin-top: 0.6rem;
+  color: var(--ink-soft);
+}
+
+.dashboard-main-action {
+  white-space: nowrap;
+}
+
+.dashboard-main-action span {
+  margin-left: 0.4rem;
+}
+
+.dashboard-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1rem;
+  margin-bottom: 2.25rem;
+}
+
+.dashboard-stat-card {
+  padding: 1.25rem;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--white);
+}
+
+.stat-icon {
+  display: grid;
+  place-items: center;
+  width: 2.4rem;
+  height: 2.4rem;
+  margin-bottom: 1rem;
+  border-radius: 10px;
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+.stat-blue {
+  background: #eaf0ff;
+  color: #2850e8;
+}
+
+.stat-purple {
+  background: #f1eaff;
+  color: #7544bd;
+}
+
+.stat-green {
+  background: #e6f8ef;
+  color: #0f9d6b;
+}
+
+.stat-orange {
+  background: #fff1e5;
+  color: #c66a20;
+}
+
+.stat-label {
+  color: var(--ink-soft);
+  font-size: 0.9rem;
+}
+
+.stat-value {
+  margin-top: 0.2rem;
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.stat-note {
+  margin-top: 0.35rem;
+  color: var(--ink-soft);
+  font-size: 0.8rem;
+}
+
+.dashboard-shortcuts {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  margin-bottom: 2.25rem;
+}
+
+.dashboard-shortcuts h2,
+.dashboard-section-heading h2 {
+  font-size: 1.25rem;
+  letter-spacing: -0.02em;
+}
+
+.dashboard-shortcuts > div > p,
+.dashboard-section-heading > div > p {
+  margin-top: 0.25rem;
+  color: var(--ink-soft);
+  font-size: 0.9rem;
+}
+
+.shortcut-card {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  min-width: min(100%, 340px);
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--white);
+  text-decoration: none;
+  transition: border-color 0.2s, transform 0.2s;
+}
+
+.shortcut-card:hover {
+  border-color: var(--signal);
+  transform: translateY(-2px);
+}
+
+.shortcut-icon {
+  display: grid;
+  flex: 0 0 2.6rem;
+  place-items: center;
+  height: 2.6rem;
+  border-radius: 9px;
+  background: #eef2ff;
+  color: var(--signal);
+  font-size: 1.3rem;
+}
+
+.shortcut-card strong,
+.shortcut-card small {
+  display: block;
+}
+
+.shortcut-card strong {
+  font-size: 0.95rem;
+}
+
+.shortcut-card small {
+  margin-top: 0.2rem;
+  color: var(--ink-soft);
+  font-size: 0.8rem;
+}
+
+.shortcut-arrow {
+  margin-left: auto;
+  color: var(--signal);
+  font-size: 1.2rem;
+}
+
+.dashboard-interviews {
+  margin-top: 1rem;
+}
+
+.dashboard-section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.interview-count {
+  padding: 0.3rem 0.7rem;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background: var(--white);
+  color: var(--ink-soft);
+  font-size: 0.8rem;
+}
+
+.dashboard-table .interview-title {
+  font-weight: 600;
+}
+
+.dashboard-table tbody tr:hover {
+  background: #f8f9fd;
+}
+
+.status-completed::before {
+  background: #8b93a7;
+}
+
+@media (max-width: 900px) {
+  .dashboard-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 600px) {
+  .dashboard-welcome {
+    align-items: flex-start;
+    flex-direction: column;
+    padding: 1.4rem;
+  }
+
+  .dashboard-main-action {
+    width: 100%;
+    text-align: center;
+  }
+
+  .dashboard-shortcuts {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .shortcut-card {
+    min-width: 0;
+  }
+
+  .dashboard-section-heading {
+    align-items: flex-start;
+  }
+
+  .dashboard-stats {
+    gap: 0.75rem;
+  }
+
+  .dashboard-stat-card {
+    padding: 1rem;
+  }
+}
