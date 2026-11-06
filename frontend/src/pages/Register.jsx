@@ -26,21 +26,63 @@ function Register() {
   const [values, setValues] = useState({ name: "", email: "", password: "", role: "" });
   const [errors, setErrors] = useState({});
   const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
 
   function handleChange(event) {
     const { name, value } = event.target;
     setValues((current) => ({ ...current, [name]: value }));
   }
 
-  function handleSubmit(event) {
-    event.preventDefault(); // stops the browser from reloading the page
-    const newErrors = validate(values);
-    setErrors(newErrors);
-    setMessage("");
-    if (Object.keys(newErrors).length === 0) {
-      setMessage("Your details look good. Sending them to the server comes in a later step.");
-    }
+
+
+async function handleSubmit(event) {
+  event.preventDefault();
+
+  const newErrors = validate(values);
+  setErrors(newErrors);
+  setMessage("");
+
+  if (Object.keys(newErrors).length > 0) {
+    return;
   }
+
+  setLoading(true);
+
+  try {
+    const response = await fetch(
+      "http://localhost:4000/api/auth/register",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: values.name.trim(),
+          email: values.email.trim(),
+          password: values.password,
+          role: values.role,
+        }),
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      setMessage(data.error || "Registration failed.");
+      return;
+    }
+
+    setMessage("Registration successful! You can now log in.");
+  } catch (error) {
+    setMessage("Cannot connect to the backend. Check that it is running.");
+  } finally {
+    setLoading(false);
+  }
+}
+
+
+
+
 
   return (
     <AuthLayout
@@ -124,12 +166,16 @@ function Register() {
           </div>
           {errors.role && <p className="field-error">{errors.role}</p>}
         </fieldset>
+        <button
+        className="btn btn-primary btn-block"
+        type="submit"
+        disabled={loading}
+        >
+          {loading ? "Creating account..." : "Create account"}
+          </button>
 
-        <button className="btn btn-primary btn-block" type="submit">
-          Create account
-        </button>
 
-        {message && <p className="form-message" role="status">{message}</p>}
+          {message && <p className="form-message" role="status">{message}</p>}
       </form>
     </AuthLayout>
   );

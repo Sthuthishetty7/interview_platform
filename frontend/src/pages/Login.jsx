@@ -19,22 +19,60 @@ function Login() {
   const [values, setValues] = useState({ email: "", password: "" });
   const [errors, setErrors] = useState({});
   const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
 
   function handleChange(event) {
     const { name, value } = event.target;
     setValues((current) => ({ ...current, [name]: value }));
   }
 
-  function handleSubmit(event) {
-    event.preventDefault();
-    const newErrors = validate(values);
-    setErrors(newErrors);
-    setMessage("");
-    if (Object.keys(newErrors).length === 0) {
-      setMessage("Your details look good. Logging in through the server comes in a later step.");
-    }
+ async function handleSubmit(event) {
+  event.preventDefault();
+
+  const newErrors = validate(values);
+  setErrors(newErrors);
+  setMessage("");
+
+  if (Object.keys(newErrors).length !== 0) {
+    return;
   }
 
+  setLoading(true);
+
+  try {
+    const response = await fetch(
+      "http://localhost:4000/api/auth/login",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: values.email.trim(),
+          password: values.password,
+        }),
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      setMessage(data.error || "Login failed. Please try again.");
+      return;
+    }
+
+    localStorage.setItem("token", data.token);
+    localStorage.setItem("user", JSON.stringify(data.user));
+
+    setMessage("Login successful!");
+  } catch (error) {
+    setMessage(
+      "Unable to connect to the server. Please check that the backend is running."
+    );
+  } finally {
+    setLoading(false);
+  }
+}
   return (
     <AuthLayout
       title="Log in"
@@ -75,9 +113,12 @@ function Login() {
           />
           {errors.password && <p className="field-error" id="password-error">{errors.password}</p>}
         </div>
-
-        <button className="btn btn-primary btn-block" type="submit">
-          Log in
+        <button
+           className="btn btn-primary btn-block"
+           type="submit"
+           disabled={loading}
+        >
+        {loading ? "Logging in..." : "Log in"}
         </button>
 
         {message && <p className="form-message" role="status">{message}</p>}

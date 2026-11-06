@@ -21,7 +21,9 @@ router.get("/:topic/questions", (req, res) => {
   const questions = mockQuestions[topic];
 
   if (!questions) {
-    return res.status(404).json({ error: "Topic not found." });
+    return res.status(404).json({
+      error: "Topic not found.",
+    });
   }
 
   const safeQuestions = questions.map((item, index) => ({
@@ -37,30 +39,64 @@ router.get("/:topic/questions", (req, res) => {
   });
 });
 
-module.exports = router;
-
+// Submit answers and calculate score
 router.post("/submit", (req, res) => {
-  const { topic, answers } = req.body;
-  const questions = mockQuestions[topic];
+  const { topic, answers } = req.body || {};
 
-  if (!questions) {
+  // Check whether topic exists
+  if (typeof topic !== "string" || !mockQuestions[topic]) {
     return res.status(404).json({
-      error: "Topic not found."
+      error: "Topic not found.",
     });
   }
 
-  if (!answers || typeof answers !== "object" || Array.isArray(answers)) {
+  const questions = mockQuestions[topic];
+
+  // Check answers format
+  if (
+    !answers ||
+    typeof answers !== "object" ||
+    Array.isArray(answers)
+  ) {
     return res.status(400).json({
-      error: "Please provide answers as an object."
+      error: "Please provide answers as an object.",
     });
+  }
+
+  // Validate question IDs and selected options
+  for (const [questionId, selectedAnswer] of Object.entries(answers)) {
+    const id = Number(questionId);
+
+    if (
+      !Number.isInteger(id) ||
+      id < 1 ||
+      id > questions.length
+    ) {
+      return res.status(400).json({
+        error: `Invalid question ID: ${questionId}`,
+      });
+    }
+
+    if (
+      !Number.isInteger(selectedAnswer) ||
+      selectedAnswer < 0 ||
+      selectedAnswer >= questions[id - 1].options.length
+    ) {
+      return res.status(400).json({
+        error: `Invalid option for question ${questionId}.`,
+      });
+    }
   }
 
   let score = 0;
 
   const results = questions.map((item, index) => {
     const questionId = String(index + 1);
-    const selectedAnswer = answers[questionId];
-    const isCorrect = selectedAnswer === item.correctAnswer;
+    const selectedAnswer = answers[questionId] ?? null;
+
+    const isCorrect =
+      selectedAnswer !== null &&
+      selectedAnswer === item.correctAnswer;
 
     if (isCorrect) {
       score++;
@@ -68,10 +104,10 @@ router.post("/submit", (req, res) => {
 
     return {
       questionId: index + 1,
-      selectedAnswer: selectedAnswer ?? null,
+      selectedAnswer,
       correctAnswer: item.correctAnswer,
       isCorrect,
-      explanation: item.explanation
+      explanation: item.explanation,
     };
   });
 
@@ -79,7 +115,11 @@ router.post("/submit", (req, res) => {
     topic,
     totalQuestions: questions.length,
     score,
-    percentage: Math.round((score / questions.length) * 100),
-    results
+    percentage: Math.round(
+      (score / questions.length) * 100
+    ),
+    results,
   });
 });
+
+module.exports = router;
