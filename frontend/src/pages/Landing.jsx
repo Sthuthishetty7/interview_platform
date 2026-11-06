@@ -44,13 +44,13 @@ const steps = [
 
 function Logo() {
   return (
-    <a className="brand" href="/" aria-label={`${PRODUCT_NAME} home`}>
+    <Link className="brand" to="/" aria-label={`${PRODUCT_NAME} home`}>
       <svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true">
         <circle cx="11" cy="15" r="9" fill="#2850e8" />
         <circle cx="19" cy="15" r="9" fill="#16213e" fillOpacity="0.85" />
       </svg>
       <span>{PRODUCT_NAME}</span>
-    </a>
+    </Link>
   );
 }
 
@@ -64,8 +64,8 @@ function Landing() {
             <a href="#features">Features</a>
             <a href="#how-it-works">How it works</a>
             <Link to="/dashboard">Dashboard</Link>
-            <a className="btn btn-ghost" href="/login">Log in</a>
-            <a className="btn btn-primary" href="/register">Create account</a>
+            <Link className="btn btn-ghost" to="/login">Log in</Link>
+<Link className="btn btn-primary" to="/register">Create account</Link>
           </nav>
         </div>
       </header>
@@ -80,8 +80,8 @@ function Landing() {
                 browser. Create a room, send the code, and start interviewing.
               </p>
               <div className="hero-actions">
-                <a className="btn btn-primary" href="/register">Create account</a>
-                <a className="btn btn-ghost" href="/login">Log in</a>
+<Link className="btn btn-ghost" to="/login">Log in</Link>
+<Link className="btn btn-primary" to="/register">Create account</Link>
               </div>
             </div>
 
@@ -151,8 +151,8 @@ function Landing() {
           <div className="container">
             <h2>Set up your first interview today.</h2>
             <div className="hero-actions">
-              <a className="btn btn-primary" href="/register">Create account</a>
-              <a className="btn btn-ghost" href="/login">Log in</a>
+            <Link className="btn btn-ghost" to="/login">Log in</Link>
+<Link className="btn btn-primary" to="/register">Create account</Link>
             </div>
           </div>
         </section>

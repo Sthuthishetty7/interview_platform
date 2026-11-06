@@ -1,37 +1,91 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import AuthLayout from "../components/layout/AuthLayout";
+import { apiFetch } from "../lib/api";
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function validate(values) {
   const errors = {};
+
   if (!emailPattern.test(values.email.trim())) {
-    errors.email = "Enter a valid email address, like name@example.com.";
+    errors.email = "Enter a valid email address.";
   }
-  if (values.password.length === 0) {
+
+  if (!values.password) {
     errors.password = "Enter your password.";
   }
+
   return errors;
 }
 
 function Login() {
-  const [values, setValues] = useState({ email: "", password: "" });
+  const navigate = useNavigate();
+
+  const [values, setValues] = useState({
+    email: "",
+    password: "",
+  });
+
   const [errors, setErrors] = useState({});
   const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
 
   function handleChange(event) {
     const { name, value } = event.target;
     setValues((current) => ({ ...current, [name]: value }));
   }
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault();
+
     const newErrors = validate(values);
     setErrors(newErrors);
     setMessage("");
-    if (Object.keys(newErrors).length === 0) {
-      setMessage("Your details look good. Logging in through the server comes in a later step.");
+
+    if (Object.keys(newErrors).length > 0) return;
+
+    setLoading(true);
+
+    try {
+      const response = await apiFetch("/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: values.email.trim(),
+          password: values.password,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Login failed.");
+      }
+
+      if (!data.token || !data.user?.id || !data.user?.role) {
+        throw new Error("Invalid login response from server.");
+      }
+
+      if (!["interviewer", "candidate"].includes(data.user.role)) {
+        throw new Error("Unrecognized user role.");
+      }
+
+      sessionStorage.setItem("token", data.token);
+      sessionStorage.setItem("user", JSON.stringify(data.user));
+
+      navigate(
+        data.user.role === "interviewer"
+          ? "/interviewer/dashboard"
+          : "/candidate/dashboard",
+        { replace: true }
+      );
+    } catch (error) {
+      setMessage(error.message || "Unable to connect to the server.");
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -56,9 +110,10 @@ function Login() {
             value={values.email}
             onChange={handleChange}
             aria-invalid={Boolean(errors.email)}
-            aria-describedby={errors.email ? "email-error" : undefined}
           />
-          {errors.email && <p className="field-error" id="email-error">{errors.email}</p>}
+          {errors.email && (
+            <p className="field-error">{errors.email}</p>
+          )}
         </div>
 
         <div className="field">
@@ -71,16 +126,25 @@ function Login() {
             value={values.password}
             onChange={handleChange}
             aria-invalid={Boolean(errors.password)}
-            aria-describedby={errors.password ? "password-error" : undefined}
           />
-          {errors.password && <p className="field-error" id="password-error">{errors.password}</p>}
+          {errors.password && (
+            <p className="field-error">{errors.password}</p>
+          )}
         </div>
 
-        <button className="btn btn-primary btn-block" type="submit">
-          Log in
+        <button
+          className="btn btn-primary btn-block"
+          type="submit"
+          disabled={loading}
+        >
+          {loading ? "Logging in..." : "Log in"}
         </button>
 
-        {message && <p className="form-message" role="status">{message}</p>}
+        {message && (
+          <p className="form-message" role="alert">
+            {message}
+          </p>
+        )}
       </form>
     </AuthLayout>
   );
