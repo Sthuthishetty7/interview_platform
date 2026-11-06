@@ -1,34 +1,20 @@
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import AppLayout from "../components/layout/AppLayout";
+import { apiRequest } from "../utils/api";
 
-const topics = [
-  { id: "C", name: "C Programming", description: "Basics, loops, pointers and memory" },
-  { id: "C++", name: "C++", description: "OOP, STL, pointers and inheritance" },
-  { id: "Java", name: "Java", description: "OOP, collections and exception handling" },
-  { id: "Python", name: "Python", description: "Syntax, data structures and functions" },
-  { id: "JavaScript", name: "JavaScript", description: "ES6, arrays, objects and async programming" },
-  { id: "HTML", name: "HTML", description: "Elements, forms, semantic tags and accessibility" },
-  { id: "CSS", name: "CSS", description: "Flexbox, Grid, responsive design and animations" },
-  { id: "Web Development", name: "Web Development", description: "Frontend, backend, APIs and full-stack concepts" },
-  { id: "React", name: "React", description: "Components, props, hooks and state" },
-  { id: "Node.js", name: "Node.js & Express", description: "Servers, middleware, routes and REST APIs" },
-  { id: "DBMS", name: "DBMS & SQL", description: "Queries, joins, keys and normalization" },
-  { id: "DSA", name: "Data Structures & Algorithms", description: "Arrays, trees, sorting and complexity" },
-  { id: "OOP", name: "Object-Oriented Programming", description: "Encapsulation, inheritance and polymorphism" },
-  { id: "Operating Systems", name: "Operating Systems", description: "Processes, threads, scheduling and memory" },
-  { id: "Computer Networks", name: "Computer Networks", description: "TCP/IP, HTTP, DNS and networking basics" },
-  { id: "AI", name: "Artificial Intelligence", description: "Search, reasoning and intelligent agents" },
-  { id: "Machine Learning", name: "Machine Learning", description: "Supervised learning, models and evaluation" },
-  { id: "Deep Learning", name: "Deep Learning", description: "Neural networks and deep learning basics" },
-  { id: "Cybersecurity", name: "Cybersecurity", description: "Encryption, authentication and common attacks" },
-  { id: "Git & GitHub", name: "Git & GitHub", description: "Commits, branches, merging and collaboration" },
-  { id: "Cloud Computing", name: "Cloud Computing", description: "Cloud services, deployment and virtualization" },
-  { id: "Software Engineering", name: "Software Engineering", description: "SDLC, testing, design and agile methods" },
-];
+const topicDescriptions = {
+  Python: "Python basics, syntax and functions",
+  Java: "OOP, collections and exception handling",
+  "C Programming": "Basics, loops, pointers and memory",
+  DBMS: "Database concepts, SQL and normalization",
+  "Data Structures": "Arrays, trees, stacks and queues",
+  "Operating Systems": "Processes, threads and memory management",
+};
 
 function MockTest() {
-  const [topic, setTopic] = useState("Python");
+  const [topics, setTopics] = useState([]);
+  const [topic, setTopic] = useState("");
   const [started, setStarted] = useState(false);
   const [questions, setQuestions] = useState([]);
   const [answers, setAnswers] = useState({});
@@ -38,6 +24,31 @@ function MockTest() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  // Fetch all available topics from backend
+  useEffect(() => {
+    async function loadTopics() {
+      setLoading(true);
+      setError("");
+
+      try {
+        const data = await apiRequest("/api/mock-tests/topics");
+
+        setTopics(data);
+
+        if (data.length > 0) {
+          setTopic(data[0].id);
+        }
+      } catch (err) {
+        setError(err.message || "Could not load topics.");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadTopics();
+  }, []);
+
+  // Fetch questions for selected topic
   async function startTest() {
     setLoading(true);
     setError("");
@@ -48,29 +59,20 @@ function MockTest() {
     setScore(null);
 
     try {
-      const response = await fetch(
-        `http://localhost:4000/api/mock-tests/${encodeURIComponent(topic)}/questions`
+      const data = await apiRequest(
+        `/api/mock-tests/${encodeURIComponent(topic)}/questions`
       );
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Could not load questions.");
-      }
-
-    setQuestions(data.questions.slice(0, 5));
+      setQuestions(data.questions);
       setStarted(true);
     } catch (err) {
-      setError(
-        err.message === "Failed to fetch"
-          ? "Could not connect to the backend. Make sure it is running."
-          : err.message
-      );
+      setError(err.message || "Could not load questions.");
     } finally {
       setLoading(false);
     }
   }
 
+  // Store selected answer
   function selectAnswer(optionIndex) {
     setAnswers((previous) => ({
       ...previous,
@@ -78,56 +80,30 @@ function MockTest() {
     }));
   }
 
+  // Submit answers to backend
+  async function submitTest() {
+    setLoading(true);
+    setError("");
 
-async function submitTest() {
-  setError("");
-  setLoading(true);
-
-  try {
-    const response = await fetch(
-      "http://localhost:4000/api/mock-tests/submit",
-      {
+    try {
+      const data = await apiRequest("/api/mock-tests/submit", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           topic,
-          questionIds: questions.map((question) => question.id),
-          answers: Object.fromEntries(
-            Object.entries(answers).map(([questionId, selectedOption]) => [
-              questionId,
-              selectedOption,
-            ])
-          ),
+          answers,
         }),
-      }
-    );
+      });
 
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.error || "Could not submit the test.");
+      setScore(data);
+      setSubmitted(true);
+    } catch (err) {
+      setError(err.message || "Could not submit the test.");
+    } finally {
+      setLoading(false);
     }
-
-    setScore({
-      ...data,
-      totalQuestions: questions.length,
-    });
-    setSubmitted(true);
-  } catch (err) {
-    console.error("Mock test submission failed:", err);
-    setError(
-      err.message === "Failed to fetch"
-        ? "Could not connect to the backend. Make sure it is running."
-        : err.message
-    );
-  } finally {
-    setLoading(false);
   }
-}
 
-
-
-
+  // Return to topic selection
   function backToTopics() {
     setStarted(false);
     setQuestions([]);
@@ -160,28 +136,36 @@ async function submitTest() {
           <h2>Choose your topic</h2>
           <p>Select a subject to practise.</p>
 
+          {loading && <p>Loading topics...</p>}
+
           <div className="mock-topic-grid">
-            {topics.filter((item) => item.id === "Python").map((item) => (
+            {topics.map((item) => (
               <button
                 key={item.id}
                 type="button"
-                className={`mock-topic-card ${topic === item.id ? "selected" : ""}`}
+                className={`mock-topic-card ${
+                  topic === item.id ? "selected" : ""
+                }`}
                 onClick={() => setTopic(item.id)}
                 disabled={loading}
               >
                 <strong>{item.name}</strong>
-                <span>{item.description}</span>
+                <span>
+                  {topicDescriptions[item.id] || "Practise technical questions"}
+                </span>
+                <span>{item.questionCount} questions</span>
               </button>
             ))}
           </div>
 
           <p>Multiple choice · View your results after submission</p>
+
           <button
             className="btn btn-primary"
             onClick={startTest}
-            disabled={loading}
+            disabled={loading || !topic}
           >
-            {loading ? "Loading questions..." : "Start test"}
+            {loading ? "Loading..." : "Start test"}
           </button>
         </section>
       ) : (
@@ -189,6 +173,7 @@ async function submitTest() {
           {!submitted ? (
             <>
               <h2>{topic} Mock Test</h2>
+
               <p>
                 Question {currentQuestion + 1} of {questions.length}
               </p>
@@ -200,7 +185,7 @@ async function submitTest() {
                   <div className="mock-options">
                     {question.options.map((option, index) => (
                       <button
-                        key={option}
+                        key={index}
                         type="button"
                         className={`mock-option ${
                           answers[question.id] === index ? "selected" : ""
@@ -214,12 +199,18 @@ async function submitTest() {
                 </div>
               )}
 
+              <p>
+                Answered: {Object.keys(answers).length} / {questions.length}
+              </p>
+
               <div className="mock-test-actions">
                 <button
                   type="button"
                   className="btn btn-ghost"
-                  onClick={() => setCurrentQuestion((n) => n - 1)}
-                  disabled={currentQuestion === 0}
+                  onClick={() =>
+                    setCurrentQuestion((n) => n - 1)
+                  }
+                  disabled={currentQuestion === 0 || loading}
                 >
                   Previous
                 </button>
@@ -228,7 +219,10 @@ async function submitTest() {
                   <button
                     type="button"
                     className="btn btn-primary"
-                    onClick={() => setCurrentQuestion((n) => n + 1)}
+                    onClick={() =>
+                      setCurrentQuestion((n) => n + 1)
+                    }
+                    disabled={loading}
                   >
                     Next
                   </button>
@@ -237,19 +231,85 @@ async function submitTest() {
                     type="button"
                     className="btn btn-primary"
                     onClick={submitTest}
+                    disabled={loading}
                   >
-                    Submit test
+                    {loading ? "Submitting..." : "Submit test"}
                   </button>
                 )}
               </div>
             </>
           ) : (
             <>
-              <h2>Test submitted!</h2>
+              <h2>Test Results</h2>
+
               <p>
-                Your score: <strong>{score.score} / {score.totalQuestions}</strong>
+                Your score:{" "}
+                <strong>
+                  {score.score} / {score.totalQuestions}
+                </strong>
               </p>
-              <p>Correct answers: {score.correctAnswers}</p>
+
+              <p>
+                Percentage: <strong>{score.percentage}%</strong>
+              </p>
+
+              <p>
+                Correct answers:{" "}
+                <strong>{score.score}</strong>
+              </p>
+
+              <p>
+                Incorrect or unanswered:{" "}
+                <strong>
+                  {score.totalQuestions - score.score}
+                </strong>
+              </p>
+
+              <h3>Review your answers</h3>
+
+              {score.results.map((result) => {
+                const originalQuestion = questions.find(
+                  (q) => q.id === result.questionId
+                );
+
+                return (
+                  <div
+                    key={result.questionId}
+                    className="mock-question"
+                  >
+                    <h3>
+                      {result.questionId}.{" "}
+                      {originalQuestion?.question}
+                    </h3>
+
+                    <p>
+                      Your answer:{" "}
+                      {result.selectedAnswer === null
+                        ? "Not answered"
+                        : originalQuestion?.options[result.selectedAnswer]}
+                    </p>
+
+                    <p>
+                      Correct answer:{" "}
+                      <strong>
+                        {originalQuestion?.options[result.correctAnswer]}
+                      </strong>
+                    </p>
+
+                    <p>
+                      Result:{" "}
+                      <strong>
+                        {result.isCorrect ? "Correct" : "Incorrect"}
+                      </strong>
+                    </p>
+
+                    <p>
+                      Explanation: {result.explanation}
+                    </p>
+                  </div>
+                );
+              })}
+
               <button
                 type="button"
                 className="btn btn-primary"
@@ -265,6 +325,7 @@ async function submitTest() {
               type="button"
               className="btn btn-ghost"
               onClick={backToTopics}
+              disabled={loading}
             >
               Exit test
             </button>
