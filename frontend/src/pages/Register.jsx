@@ -1,44 +1,129 @@
+
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import AuthLayout from "../components/layout/AuthLayout";
+import { apiFetch } from "../lib/api";
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-// Checks the form values and returns an object of error messages.
 function validate(values) {
   const errors = {};
+
   if (values.name.trim().length < 2) {
     errors.name = "Enter your full name (at least 2 characters).";
   }
+
   if (!emailPattern.test(values.email.trim())) {
-    errors.email = "Enter a valid email address, like name@example.com.";
+    errors.email = "Enter a valid email address.";
   }
+
   if (values.password.length < 8) {
-    errors.password = "Use at least 8 characters for your password.";
+    errors.password = "Use at least 8 characters.";
   }
-  if (!values.role) {
+
+  if (!["interviewer", "candidate"].includes(values.role)) {
     errors.role = "Choose how you will use the platform.";
   }
+
   return errors;
 }
 
 function Register() {
-  const [values, setValues] = useState({ name: "", email: "", password: "", role: "" });
+  const navigate = useNavigate();
+
+  const [values, setValues] = useState({
+    name: "",
+    email: "",
+    password: "",
+    role: "",
+  });
+
   const [errors, setErrors] = useState({});
   const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
 
   function handleChange(event) {
     const { name, value } = event.target;
     setValues((current) => ({ ...current, [name]: value }));
   }
 
-  function handleSubmit(event) {
-    event.preventDefault(); // stops the browser from reloading the page
+  async function handleSubmit(event) {
+    event.preventDefault();
+
     const newErrors = validate(values);
     setErrors(newErrors);
     setMessage("");
-    if (Object.keys(newErrors).length === 0) {
-      setMessage("Your details look good. Sending them to the server comes in a later step.");
+
+    if (Object.keys(newErrors).length > 0) return;
+
+    setLoading(true);
+
+    try {
+      const registrationResponse = await apiFetch("/api/auth/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: values.name.trim(),
+          email: values.email.trim(),
+          password: values.password,
+          role: values.role,
+        }),
+      });
+
+      const registrationData = await registrationResponse.json();
+
+      if (!registrationResponse.ok) {
+        throw new Error(
+          registrationData.error || registrationData.message || "Registration failed."
+        );
+      }
+
+      // Registration does not return a token, so log in next.
+      const loginResponse = await apiFetch("/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: values.email.trim(),
+          password: values.password,
+        }),
+      });
+
+      const loginData = await loginResponse.json();
+
+      if (!loginResponse.ok) {
+  throw new Error(
+    loginData.error ||
+    loginData.message ||
+    "Account created, but automatic login failed. Please log in manually."
+  );
+}
+
+if (
+  !loginData.token ||
+  !loginData.user?.id ||
+  !["interviewer", "candidate"].includes(loginData.user.role)
+) {
+  throw new Error(
+    "Account created, but the login response was invalid. Please log in manually."
+  );
+}
+      sessionStorage.setItem("token", loginData.token);
+      sessionStorage.setItem("user", JSON.stringify(loginData.user));
+
+      navigate(
+        loginData.user.role === "interviewer"
+          ? "/interviewer/dashboard"
+          : "/candidate/dashboard",
+        { replace: true }
+      );
+    } catch (error) {
+      setMessage(error.message || "Unable to connect to the server.");
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -63,9 +148,8 @@ function Register() {
             value={values.name}
             onChange={handleChange}
             aria-invalid={Boolean(errors.name)}
-            aria-describedby={errors.name ? "name-error" : undefined}
           />
-          {errors.name && <p className="field-error" id="name-error">{errors.name}</p>}
+          {errors.name && <p className="field-error">{errors.name}</p>}
         </div>
 
         <div className="field">
@@ -78,9 +162,8 @@ function Register() {
             value={values.email}
             onChange={handleChange}
             aria-invalid={Boolean(errors.email)}
-            aria-describedby={errors.email ? "email-error" : undefined}
           />
-          {errors.email && <p className="field-error" id="email-error">{errors.email}</p>}
+          {errors.email && <p className="field-error">{errors.email}</p>}
         </div>
 
         <div className="field">
@@ -93,9 +176,8 @@ function Register() {
             value={values.password}
             onChange={handleChange}
             aria-invalid={Boolean(errors.password)}
-            aria-describedby={errors.password ? "password-error" : undefined}
           />
-          {errors.password && <p className="field-error" id="password-error">{errors.password}</p>}
+          {errors.password && <p className="field-error">{errors.password}</p>}
         </div>
 
         <fieldset className="field role-field">
@@ -111,6 +193,7 @@ function Register() {
               />
               <span>Interviewer</span>
             </label>
+
             <label className="role-option">
               <input
                 type="radio"
@@ -125,11 +208,19 @@ function Register() {
           {errors.role && <p className="field-error">{errors.role}</p>}
         </fieldset>
 
-        <button className="btn btn-primary btn-block" type="submit">
-          Create account
+        <button
+          className="btn btn-primary btn-block"
+          type="submit"
+          disabled={loading}
+        >
+          {loading ? "Creating account..." : "Create account"}
         </button>
 
-        {message && <p className="form-message" role="status">{message}</p>}
+        {message && (
+          <p className="form-message" role="alert">
+            {message}
+          </p>
+        )}
       </form>
     </AuthLayout>
   );

@@ -62,7 +62,7 @@ function Login() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || "Login failed.");
+        throw new Error(data.error || data.message || "Login failed.");
       }
 
       if (!data.token || !data.user?.id || !data.user?.role) {
