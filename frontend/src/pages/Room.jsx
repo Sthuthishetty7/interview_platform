@@ -4,7 +4,7 @@ import { io } from "socket.io-client";
 import { PRODUCT_NAME } from "../utils/constants";
 
 // Where the signaling server runs. Change this in frontend/.env later if needed.
-const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || "http://localhost:4000";
+const SOCKET_URL = import.meta.env.VITE_SOCKET_URL;
 
 // A free public server that helps two browsers discover how to reach each other.
 const ICE_SERVERS = [{ urls: "stun:stun.l.google.com:19302" }];

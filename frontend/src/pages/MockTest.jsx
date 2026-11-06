@@ -1,6 +1,7 @@
 
 import { useState } from "react";
 import AppLayout from "../components/layout/AppLayout";
+import { apiFetch } from "../lib/api";
 
 const topics = [
   { id: "C", name: "C Programming", description: "Basics, loops, pointers and memory" },
@@ -48,10 +49,9 @@ function MockTest() {
     setScore(null);
 
     try {
-      const response = await fetch(
-        `http://localhost:4000/api/mock-tests/${encodeURIComponent(topic)}/questions`
-      );
-
+      const response = await apiFetch(
+  `/api/mock-tests/${encodeURIComponent(topic)}/questions`
+);
       const data = await response.json();
 
       if (!response.ok) {
@@ -84,8 +84,8 @@ async function submitTest() {
   setLoading(true);
 
   try {
-    const response = await fetch(
-      "http://localhost:4000/api/mock-tests/submit",
+   const response = await apiFetch(
+  "/api/mock-tests/submit",
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
