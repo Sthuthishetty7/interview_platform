@@ -4,7 +4,13 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const { randomUUID } = require('crypto');
+const http = require('http');
+const { Server } = require('socket.io');
+const setupSocket = require('./socket');
+
 const app = express();
+const server = http.createServer(app);
+
 const PORT = process.env.PORT || 4000;
 const pool = require('./db');
 const mockTestRoutes = require('./mock-test/mockTestRoutes');
@@ -13,6 +19,19 @@ const authMiddleware = require('./middleware/authMiddleware');
 const notesRoutes = require('./notes/notesRoutes');
 app.use(cors());
 app.use(express.json());
+const io = new Server(server, {
+    cors: {
+        origin: [
+            'https://interview-platform-git-feature-mock-test-bit-heads3.vercel.app',
+            'http://localhost:5173',
+            'http://localhost:5174'
+        ],
+        methods: ['GET', 'POST'],
+        credentials: true
+    }
+});
+
+setupSocket(io, pool);
 
 app.use('/api/mock-tests', mockTestRoutes);
 app.use('/api/auth', authRoutes);
@@ -239,7 +258,6 @@ app.get('/api/check-tables', async (req, res) => {
     }
 });
 
-// Start server
-app.listen(PORT, () => {
+server.listen(PORT, () => {
     console.log(`Server running at http://localhost:${PORT}`);
 });
