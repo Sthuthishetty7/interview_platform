@@ -74,7 +74,11 @@ function Room() {
     if (!ready) return;
 
     setStatus("Connecting to the room...");
-    const socket = io(SOCKET_URL);
+    const socket = io(SOCKET_URL, {
+    auth: {
+        token: localStorage.getItem("token")
+    }
+});
     let peer = null; // the direct connection to the other person
     let pendingCandidates = []; // connection hints that arrived too early
 
